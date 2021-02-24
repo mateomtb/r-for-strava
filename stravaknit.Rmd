@@ -1,0 +1,69 @@
+---
+title: "Mateo's YTD Strava Data"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r global-options, include=TRUE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=TRUE, warning=FALSE, message=FALSE)
+
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(lubridate)
+```
+I am an avid user of the Strava application. It's an application on your phone that allows you to track detailed metrics about all you physical activities. Although the application allows you to track many different types of activities, it only provides roll up data for 3 activities, Cycling, Running and Swimming. This bums me out because two activities I capture on a regular basis are Hiking and my Strength Workouts. Strava actually allows you to download (once per week) all of your personal data as a CSV. This contains all the data from all of your activities as 78 different variables such as distance, speed, date etc. I created this script to read in this CSV file which I can then use to produce any report I like. Currently this creates 3 YTD plots for the activities I most often record. They are total elevation gain, total distance and the total active time for each. It can easily be altered to create plots for any strava variable. 
+
+```{r}
+#read csv file
+activities <- read.csv('activities.csv')
+
+#Create a new data frame with clean variable names and dates. Subset data to YTD by activities. After this you can use cleanactivities to do whatever you like with any of the 78 column variables, distance, elevation_gain, date, description etc.
+cleanactivities <- activities %>%
+  clean_names() %>% 
+  #print(activity_type) %>% 
+  mutate(activity_date = as.POSIXct(activity_date, format = "%b %d, %Y,%H:%M:%S %p")) %>%
+  mutate(activity_type = str_replace(activity_type, "Run", "Hike")) %>%
+  filter(activity_date >= as.Date('2021-01-01') & activity_date <= today()) %>%
+  filter(str_detect(activity_type, 'Hike|Ride|Workout'))
+
+#group distances by activity
+  dist <- cleanactivities %>% 
+  group_by(activity_type) %>% 
+  summarise(distance = round(sum(distance) / 1.609)) 
+  #print(dist)
+#group elevations by activity  
+  elev <- cleanactivities %>% 
+  group_by(activity_type) %>% 
+  summarise(elevation_gain = round(sum(elevation_gain) * 3.281))
+  #print(elev)
+#group elapsed time by activity
+  dur <- cleanactivities %>% 
+  group_by(activity_type) %>% 
+  summarise(elapsed_time = round(sum(elapsed_time / 60) / 60))
+  #print(dur)
+ 
+#Function plots activities, x = summarised data, metric = miles,hours etc., ylabel is metric name.  
+  activityPlot <- function(x, metric, ylabel){
+      ggplot(x, aes(activity_type, metric, fill = activity_type)) +
+      ggtitle(paste( "Total YTD", ylabel, " =", sum(metric) ) ) +
+      theme(plot.title = element_text(size = 20, face = "bold")) +
+      geom_col() +
+      geom_text(aes(label = metric, y = metric - 10), position = position_stack(vjust = 0.5), size = 10) +
+      ylab(ylabel) +
+      scale_fill_manual(values=c("#CC6666", "#9999CC", "#66CC99"))
+  }
+
+```
+
+## Create plots
+
+```{r}
+activityPlot(dist, dist$distance, "Distance In Miles")
+activityPlot(elev, elev$elevation_gain, "Elevation Gain In Feet")
+activityPlot(dur, dur$elapsed_time, "Elapsed Workout Time In Hours")
+```
+
+
