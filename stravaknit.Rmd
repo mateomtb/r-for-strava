@@ -5,7 +5,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r global-options, include=TRUE}
+```{r global-options, include=FALSE}
 knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
                       echo=TRUE, warning=FALSE, message=FALSE)
 
@@ -26,7 +26,7 @@ cleanactivities <- activities %>%
   #print(activity_type) %>% 
   mutate(activity_date = as.POSIXct(activity_date, format = "%b %d, %Y,%H:%M:%S %p")) %>%
   mutate(activity_type = str_replace(activity_type, "Run", "Hike")) %>%
-  filter(activity_date >= as.Date('2021-01-01') & activity_date <= today()) %>%
+  filter(activity_date >= as.Date('2021-01-01')) %>%
   filter(str_detect(activity_type, 'Hike|Ride|Workout'))
 
 #group distances by activity
