@@ -4,7 +4,11 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-
+Libraries Used 
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(lubridate)
 ```{r global-options, include=FALSE}
 knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
                       echo=TRUE, warning=FALSE, message=FALSE)
@@ -13,8 +17,9 @@ library(tidyverse)
 library(janitor)
 library(skimr)
 library(lubridate)
+library(DT)
 ```
-I am an avid user of the Strava application. It's an application on your phone that allows you to track detailed metrics about all you physical activities. Although the application allows you to track many different types of activities, it only provides roll up data for 3 activities, Cycling, Running and Swimming. This bums me out because two activities I capture on a regular basis are Hiking and my Strength Workouts. Strava actually allows you to download (once per week) all of your personal data as a CSV. This contains all the data from all of your activities as 78 different variables such as distance, speed, date etc. I created this script to read in this CSV file which I can then use to produce any report I like. Currently this creates 3 YTD plots for the activities I most often record. They are total elevation gain, total distance and the total active time for each. It can easily be altered to create plots for any strava variable. 
+I am an avid user of the Strava application. It's an application on your phone that allows you to track detailed metrics about all you physical activities. Although the application allows you to track many different types of activities, it only provides roll up data for 3 activities, Cycling, Running and Swimming. This bums me out because two activities I capture on a regular basis are Hiking and my Strength Workouts. My bike activities are well represented. So how to I mash it all up so I can see it all? Strava actually allows you to download (once per week) all of your personal data as a CSV. This contains all the data from all of your activities as 78 different variables such as distance, speed, date etc. This is nice but not ideal for any sort of aggregation or analysis. This  script reads the Strava CSV file (as is) and does some basic clean up before creating a data frame. From there you can easily perform basic analysis and plotting. Currently I am creating 3 YTD plots for the activities I most often record and some summaries for total elevation gain, total distance and the total activity time for each. 
 
 ```{r}
 #read csv file
@@ -25,6 +30,7 @@ cleanactivities <- activities %>%
   clean_names() %>% 
   #print(activity_type) %>% 
   mutate(activity_date = as.POSIXct(activity_date, format = "%b %d, %Y,%H:%M:%S %p")) %>%
+  #For a short time I was logging hikes as runs so I could see the aggregate data in the app. So here I change them to hikes so my totals are accurate.
   mutate(activity_type = str_replace(activity_type, "Run", "Hike")) %>%
   filter(activity_date >= as.Date('2021-01-01')) %>%
   filter(str_detect(activity_type, 'Hike|Ride|Workout'))
@@ -44,8 +50,18 @@ cleanactivities <- activities %>%
   group_by(activity_type) %>% 
   summarise(elapsed_time = round(sum(elapsed_time / 60) / 60))
   #print(dur)
- 
-#Function plots activities, x = summarised data, metric = miles,hours etc., ylabel is metric name.  
+```
+  
+### Strava variable names 
+
+```{r}
+names(cleanactivities)
+```
+
+### Plot function
+
+```{r}
+#Function plots activities, x = summarized data, metric = miles,hours etc., ylabel is metric name.  
   activityPlot <- function(x, metric, ylabel){
       ggplot(x, aes(activity_type, metric, fill = activity_type)) +
       ggtitle(paste( "Total YTD", ylabel, " =", sum(metric) ) ) +
@@ -58,7 +74,7 @@ cleanactivities <- activities %>%
 
 ```
 
-## Create plots
+### Create plots
 
 ```{r}
 activityPlot(dist, dist$distance, "Distance In Miles")
