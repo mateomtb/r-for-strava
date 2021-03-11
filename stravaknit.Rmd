@@ -4,11 +4,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-Libraries Used 
-library(tidyverse)
-library(janitor)
-library(skimr)
-library(lubridate)
+
 ```{r global-options, include=FALSE}
 knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
                       echo=TRUE, warning=FALSE, message=FALSE)
@@ -19,7 +15,14 @@ library(skimr)
 library(lubridate)
 library(DT)
 ```
-I am an avid user of the Strava application. It's an application on your phone that allows you to track detailed metrics about all you physical activities. Although the application allows you to track many different types of activities, it only provides roll up data for 3 activities, Cycling, Running and Swimming. This bums me out because two activities I capture on a regular basis are Hiking and my Strength Workouts. My bike activities are well represented. So how to I mash it all up so I can see it all? Strava actually allows you to download (once per week) all of your personal data as a CSV. This contains all the data from all of your activities as 78 different variables such as distance, speed, date etc. This is nice but not ideal for any sort of aggregation or analysis. This  script reads the Strava CSV file (as is) and does some basic clean up before creating a data frame. From there you can easily perform basic analysis and plotting. Currently I am creating 3 YTD plots for the activities I most often record and some summaries for total elevation gain, total distance and the total activity time for each. 
+I am an avid user of the Strava application. It's an application on your phone that allows you to track detailed metrics about all you physical activities. Although the application allows you to track many different types of activities, it only provides roll up data for 3 activities, Cycling, Running and Swimming. This bums me out because two activities I capture on a regular basis are Hiking and my Strength Workouts. My bike activities are well represented but perhaps I'd like to see the data in my own way? Strava allows you to download (once per week) all of your personal data as a CSV file. This contains all the data from all of your activities as 78 different variables such as distance, speed, date etc. Instead of nasty spreadsheet exercise let's use R and have some fun with this. The code below reads the Strava CSV file (as is) and does some basic clean up before creating a data frame. From there you can easily perform basic analysis and plotting. 3 of the plots below are driven by a function which is easy to tune to different variables. The 4th is an example of a dated roll up. 
+
+##### library(tidyverse)
+##### library(janitor)
+##### library(skimr)
+##### library(lubridate)
+##### library(DT)
+##### library(scales)
 
 ```{r}
 #read csv file
